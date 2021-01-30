@@ -167,7 +167,8 @@ file(GLOB FILAMENTAPP_SRCS
         src/filamentapp/IcoSphere.cpp
         src/filamentapp/Image.cpp
         src/filamentapp/MeshAssimp.cpp
-        src/filamentapp/Sphere.cpp)
+        src/filamentapp/Sphere.cpp
+        src/filamentapp/EasyApp.cpp)
 
 if (WIN32)
     set(FILAMENTAPP_SRCS ${FILAMENTAPP_SRCS} src/filamentapp/NativeWindowHelperWindows.cpp)

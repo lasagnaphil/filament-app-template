@@ -23,6 +23,8 @@
 
 #include <camutils/Manipulator.h>
 
+using namespace filament;
+
 struct Config {
     std::string title;
     std::string iblDirectory;
