@@ -127,12 +127,16 @@ function(add_mesh SOURCE TARGET)
     set(RESOURCE_BINS ${RESOURCE_BINS} ${target_mesh} PARENT_SCOPE)
 endfunction()
 
-file(GLOB MATERIAL_SRCS ${CMAKE_SOURCE_DIR}/assets/materials/*.mat)
-foreach(mat_src ${MATERIAL_SRCS})
-    add_material(${mat_src})
-endforeach()
+##
+## Compile assets
+##
 
-# Compile assets
+add_material("assets/materials/aiDefaultMat.mat")
+add_material("assets/materials/aiDefaultTrans.mat")
+add_material("assets/materials/bakedColor.mat")
+add_material("assets/materials/depthVisualizer.mat")
+add_material("assets/materials/transparentColor.mat")
+add_material("assets/materials/uiBlit.mat")
 
 add_envmap("assets/environments/lightroom_14b.hdr" "default_env")
 
@@ -145,7 +149,9 @@ add_ktxfiles("assets/models/monkey/ao.png" "ao.ktx" "--grayscale")
 
 add_pngfile("assets/models/monkey/normal.png" "normal.png")
 
-# Generate resources
+##
+## Generate resources
+##
 
 get_resgen_vars(${RESOURCE_DIR} resources)
 add_custom_command(
@@ -158,38 +164,45 @@ if (DEFINED RESGEN_SOURCE_FLAGS)
     set_source_files_properties(${RESGEN_SOURCE} PROPERTIES COMPILE_FLAGS ${RESGEN_SOURCE_FLAGS})
 endif()
 
-# Compile executable
+##
+## Compile executable
+##
 
-file(GLOB FILAMENTAPP_SRCS
-        src/filamentapp/Cube.cpp
-        src/filamentapp/FilamentApp.cpp
-        src/filamentapp/IBL.cpp
-        src/filamentapp/IcoSphere.cpp
-        src/filamentapp/Image.cpp
-        src/filamentapp/MeshAssimp.cpp
-        src/filamentapp/Sphere.cpp
-        src/filamentapp/EasyApp.cpp)
+set(FILAMENTAPP_DIR deps/filamentapp)
+set(FILAMENTAPP_INCLUDE_DIR deps/filamentapp/include)
+set(FILAMENTAPP_SRCS
+        ${FILAMENTAPP_DIR}/src/Cube.cpp
+        ${FILAMENTAPP_DIR}/src/FilamentApp.cpp
+        ${FILAMENTAPP_DIR}/src/IBL.cpp
+        ${FILAMENTAPP_DIR}/src/IcoSphere.cpp
+        ${FILAMENTAPP_DIR}/src/Image.cpp
+        ${FILAMENTAPP_DIR}/src/MeshAssimp.cpp
+        ${FILAMENTAPP_DIR}/src/Sphere.cpp
+        ${FILAMENTAPP_DIR}/src/EasyApp.cpp)
 
 if (WIN32)
-    set(FILAMENTAPP_SRCS ${FILAMENTAPP_SRCS} src/filamentapp/NativeWindowHelperWindows.cpp)
+    set(FILAMENTAPP_SRCS ${FILAMENTAPP_SRCS} ${FILAMENTAPP_DIR}/src/NativeWindowHelperWindows.cpp)
 endif()
 if (LINUX)
-    set(FILAMENTAPP_SRCS ${FILAMENTAPP_SRCS} src/filamentapp/NativeWindowHelperLinux.cpp)
+    set(FILAMENTAPP_SRCS ${FILAMENTAPP_SRCS} ${FILAMENTAPP_DIR}/src/NativeWindowHelperLinux.cpp)
 endif()
 if (APPLE)
-    set(FILAMENTAPP_SRCS ${FILAMENTAPP_SRCS} src/filamentapp/NativeWindowHelperCocoa.mm)
+    set(FILAMENTAPP_SRCS ${FILAMENTAPP_SRCS} ${FILAMENTAPP_DIR}/src/NativeWindowHelperCocoa.mm)
 endif()
 
-file(GLOB FILAGUI_SRCS
-        src/filagui/ImGuiExtensions.cpp
-        src/filagui/ImGuiHelper.cpp)
+set(FILAGUI_DIR deps/filagui)
+set(FILAGUI_INCLUDE_DIR deps/filagui/include)
+set(FILAGUI_SRCS
+        ${FILAGUI_DIR}/src/ImGuiExtensions.cpp
+        ${FILAGUI_DIR}/src/ImGuiHelper.cpp)
 
-file(GLOB_RECURSE APP_SRCS src/app/*.cpp)
+set(APP_SRCS src/main.cpp)
 
 add_executable(filament_app_template ${APP_SRCS} ${FILAMENTAPP_SRCS} ${FILAGUI_SRCS} ${RESGEN_SOURCE})
 target_link_libraries(filament_app_template PRIVATE
         filament
         pthread c++ c++abi dl
         imgui implot stb assimp sdl2)
-target_include_directories(filament_app_template PRIVATE include generated/resources)
+target_include_directories(filament_app_template PRIVATE
+        include ${RESOURCE_DIR} ${FILAMENTAPP_INCLUDE_DIR} ${FILAGUI_INCLUDE_DIR})
 target_compile_definitions(filament_app_template PRIVATE -DRELATIVE_ASSET_PATH="..")
